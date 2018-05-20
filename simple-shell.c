@@ -59,6 +59,9 @@ int main(void)
         } else {
             args[av]=NULL;
         }
+        if(strcmp(args[0],"exit")==0){
+            return 0;
+        }
         pid = fork();
         if(pid<0) {
             printf("FORK FAILED\n");
