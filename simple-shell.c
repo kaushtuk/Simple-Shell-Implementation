@@ -16,6 +16,11 @@
 
 #define MAX_LINE		80 /* 80 chars per line, per command */
 
+char* history[10][MAX_LINE/2 + 1];
+int buffHead = 0;
+void free_history(void);
+void print_history(void);
+char** history_computation(char** args);
 int main(void)
 {
 	char *args[MAX_LINE/2 + 1];	/* command line (of 80) has max of 40 arguments */
@@ -38,6 +43,7 @@ int main(void)
             }
             continue;
         }
+        //Parse cmd_line
         while(*sptr==' ' || *sptr=='\t')
             sptr++;
         while(*sptr!='\0'){
@@ -50,6 +56,7 @@ int main(void)
             }
             sptr += (strlen(args[av])+strlen(tempBuff));
             av++;
+            free(tempBuff);
         }
         int need_to_wait = 1;
         if(strlen(args[av-1])==1 && args[av-1][0]=='&') {
@@ -60,14 +67,22 @@ int main(void)
             args[av]=NULL;
         }
         if(strcmp(args[0],"exit")==0){
+            free_history();
             return 0;
         }
+        //History Computation
+        if(args[1]==NULL && strcmp(args[0],"history")==0) {
+            print_history();
+            continue;
+        }
+        char **argsPtr = history_computation(args);
+        //Fork child to Execute args
         pid = fork();
         if(pid<0) {
             printf("FORK FAILED\n");
             return 1;
         } else if(pid==0) {
-            if(execvp(args[0],args)) {
+            if(execvp(argsPtr[0],argsPtr)) {
                 printf("INVALID COMMAND\n");
                 return 1;
             }
@@ -88,4 +103,32 @@ int main(void)
     }
     
 	return 0;
+}
+char** history_computation(char **args) {
+    int i;
+    for(i=0;i<(MAX_LINE/2+1);i++) {
+        if(history[buffHead%10][i])
+            free(history[buffHead%10][i]);
+        history[buffHead][i]=args[i];
+    }
+    return history[(buffHead++)%10];
+}
+void free_history(void) {
+    int i,j;
+    for(i=0;i<10 && i<buffHead;i++) {
+        for(j=0;history[i][j]!=NULL;j++) {
+            if(history[i][j])
+                free(history[i][j]);
+        }
+    }
+}
+void print_history(void) {
+    int i,j;
+    for(i=0;i<10 && i<buffHead;i++) {
+        printf("[%d] ",buffHead-i);
+        for(j=0;history[i][j]!=NULL;j++) {
+            printf("%s ",history[i][j]);
+        }
+        printf("\n");
+    }
 }
