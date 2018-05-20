@@ -32,7 +32,12 @@ int main(void)
         char cmd_line[MAX_LINE+1];
         char *sptr = cmd_line;
         int av=0;
-        scanf("%[^\n]%*1[\n]",cmd_line);
+        if(scanf("%[^\n]%*1[\n]",cmd_line)<1) {
+            if(scanf("%1[\n]",cmd_line)<1) {
+                printf("STDIN FAILED\n");
+            }
+            continue;
+        }
         while(*sptr==' ' || *sptr=='\t')
             sptr++;
         while(*sptr!='\0'){
@@ -46,22 +51,32 @@ int main(void)
             sptr += (strlen(args[av])+strlen(tempBuff));
             av++;
         }
-        args[av]=NULL;
+        int need_to_wait = 1;
+        if(strlen(args[av-1])==1 && args[av-1][0]=='&') {
+            need_to_wait = 0;
+            fflush(stdout);
+            free(args[av-1]);
+            args[av-1]=NULL;
+        } else {
+            args[av]=NULL;
+        }
         pid = fork();
         if(pid<0) {
             printf("FORK FAILED\n");
             return 1;
         } else if(pid==0) {
-            execvp(args[0],args);
-        } else {
-            int i;
-            int need_to_wait = 1;
-            for(i=0;i<av;i++) {
-                if(strlen(args[i])==1 && args[i][0]=='&')
-                    need_to_wait = 0;
+            if(execvp(args[0],args)) {
+                printf("INVALID COMMAND\n");
+                return 1;
             }
+        } else {
             if(need_to_wait)
                 wait(NULL);
+            else {
+                printf("[1]%d\n",pid);
+                fflush(stdout);
+                //wait(NULL);
+            }
         }
         /**
          * After reading user input, the steps are:
