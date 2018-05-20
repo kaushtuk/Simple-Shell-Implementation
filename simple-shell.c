@@ -54,7 +54,6 @@ int main(void)
         int need_to_wait = 1;
         if(strlen(args[av-1])==1 && args[av-1][0]=='&') {
             need_to_wait = 0;
-            fflush(stdout);
             free(args[av-1]);
             args[av-1]=NULL;
         } else {
@@ -70,12 +69,11 @@ int main(void)
                 return 1;
             }
         } else {
-            if(need_to_wait)
-                wait(NULL);
+            if(need_to_wait) {
+                while(wait(NULL) != pid);
+            }
             else {
                 printf("[1]%d\n",pid);
-                fflush(stdout);
-                //wait(NULL);
             }
         }
         /**
