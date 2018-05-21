@@ -18,6 +18,7 @@
 
 char* history[10][MAX_LINE/2 + 1];
 int buffHead = 0;
+void init_history(void);
 void free_history(void);
 void print_history(void);
 char** history_computation(char** args);
@@ -28,6 +29,7 @@ int main(void)
 	
 	/*int i, upper;*/
 		
+    init_history();
     while (should_run){   
         printf("osh>");
         fflush(stdout);
@@ -40,6 +42,7 @@ int main(void)
         if(scanf("%[^\n]%*1[\n]",cmd_line)<1) {
             if(scanf("%1[\n]",cmd_line)<1) {
                 printf("STDIN FAILED\n");
+                return 1;
             }
             continue;
         }
@@ -49,12 +52,15 @@ int main(void)
         while(*sptr!='\0'){
             char *tempBuff=(char*)malloc((MAX_LINE+1)*sizeof(char));
             args[av]=(char*)malloc((MAX_LINE+1)*sizeof(char));
-            int ret = sscanf(sptr,"%[^ \t]%[ \t]",args[av],tempBuff);
+            int ret = sscanf(sptr,"%[^ \t]",args[av]);
+            sptr += strlen(args[av]);
             if(ret<1){
                 printf("INVALID COMMAND\n");
                 return 1;
             }
-            sptr += (strlen(args[av])+strlen(tempBuff));
+            ret = sscanf(sptr,"%[ \t]",tempBuff);
+            if(ret>0)
+                sptr += strlen(tempBuff);
             av++;
             free(tempBuff);
         }
@@ -106,12 +112,21 @@ int main(void)
 }
 char** history_computation(char **args) {
     int i;
-    for(i=0;i<(MAX_LINE/2+1);i++) {
-        if(history[buffHead%10][i])
-            free(history[buffHead%10][i]);
-        history[buffHead][i]=args[i];
+    for(i=0;i<(MAX_LINE/2+1) && history[buffHead%10][i]!=NULL;i++)
+        free(history[buffHead%10][i]);
+    for(i=0;args[i]!=NULL;i++) {
+        history[buffHead%10][i]=args[i];
     }
+    history[buffHead%10][i]=args[i];
     return history[(buffHead++)%10];
+}
+void init_history(void) {
+    int i,j;
+    for(i=0;i<10;i++) {
+        for(j=0;j<(MAX_LINE/2+1);j++) {
+            history[i][j]=NULL;
+        }
+    }
 }
 void free_history(void) {
     int i,j;
