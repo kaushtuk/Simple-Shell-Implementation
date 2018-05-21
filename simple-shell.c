@@ -140,9 +140,14 @@ void free_history(void) {
 void print_history(void) {
     int i,j;
     for(i=0;i<10 && i<buffHead;i++) {
-        printf("[%d] ",buffHead-i);
-        for(j=0;history[i][j]!=NULL;j++) {
-            printf("%s ",history[i][j]);
+        int index;
+        if(buffHead>10)
+            index=buffHead-9+i;
+        else
+            index=i+1;
+        printf("[%d] ",index);
+        for(j=0;history[(index-1)%10][j]!=NULL;j++) {
+            printf("%s ",history[(index-1)%10][j]);
         }
         printf("\n");
     }
