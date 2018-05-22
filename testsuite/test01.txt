@@ -1,0 +1,19 @@
+ls
+
+
+
+pwd
+ls -l
+which gcc
+ps -l
+history
+which vcom
+echo $path
+echo $PATH
+echo $PWD
+pwd
+ls -l
+ls ../
+history
+exit
+
