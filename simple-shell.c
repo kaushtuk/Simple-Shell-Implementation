@@ -17,11 +17,12 @@
 #define MAX_LINE		80 /* 80 chars per line, per command */
 
 char* history[10][MAX_LINE/2 + 1];
+int history_wait[10];
 int buffHead = 0;
 void init_history(void);
 void free_history(void);
 void print_history(void);
-char** history_computation(char** args);
+char** history_computation(char** args,int *needWait);
 int main(void)
 {
 	char *args[MAX_LINE/2 + 1];	/* command line (of 80) has max of 40 arguments */
@@ -81,7 +82,7 @@ int main(void)
             print_history();
             continue;
         }
-        char **argsPtr = history_computation(args);
+        char **argsPtr = history_computation(args, &need_to_wait);
         //Fork child to Execute args
         pid = fork();
         if(pid<0) {
@@ -110,7 +111,7 @@ int main(void)
     
 	return 0;
 }
-char** history_computation(char **args) {
+char** history_computation(char **args, int *needWait) {
     int i;
     if(args[1]==NULL && strcmp(args[0],"!!")==0) {
         if(buffHead>0){
@@ -120,6 +121,7 @@ char** history_computation(char **args) {
                 strcpy(args[i],history[(buffHead-1)%10][i]);
             }
             args[i]=NULL;
+            *needWait=history_wait[(buffHead-1)%10];
         } else {
             printf("NO COMMANDS IN HISTORY\n");
             return args;
@@ -135,6 +137,7 @@ char** history_computation(char **args) {
                     strcpy(args[i],history[(idx-1)%10][i]);
                 }
                 args[i]=NULL;
+                *needWait=history_wait[(idx-1)%10];
             } else {
                 printf("NO SUCH COMMAND IN HISTORY(index out of range)\n");
                 return args;
@@ -151,6 +154,7 @@ char** history_computation(char **args) {
         history[buffHead%10][i]=args[i];
     }
     history[buffHead%10][i]=args[i];
+    history_wait[buffHead%10]=*needWait;
     return history[(buffHead++)%10];
 }
 void init_history(void) {
@@ -159,6 +163,7 @@ void init_history(void) {
         for(j=0;j<(MAX_LINE/2+1);j++) {
             history[i][j]=NULL;
         }
+        history_wait[i]=0;
     }
 }
 void free_history(void) {
@@ -181,6 +186,9 @@ void print_history(void) {
         printf("[%d] ",index);
         for(j=0;history[(index-1)%10][j]!=NULL;j++) {
             printf("%s ",history[(index-1)%10][j]);
+        }
+        if(history_wait[(index-1)%10]==0) {
+            printf("&");
         }
         printf("\n");
     }
