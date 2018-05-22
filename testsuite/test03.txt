@@ -1,0 +1,17 @@
+ls
+which gcc
+!!
+!1
+history
+!!
+which python
+history
+!!
+history
+!2
+history
+ls ../
+history
+!9
+exit
+

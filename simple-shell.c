@@ -112,6 +112,39 @@ int main(void)
 }
 char** history_computation(char **args) {
     int i;
+    if(args[1]==NULL && strcmp(args[0],"!!")==0) {
+        if(buffHead>0){
+            strcpy(args[0],history[(buffHead-1)%10][0]);
+            for(i=1;history[(buffHead-1)%10][i]!=NULL;i++) {
+                args[i]=(char*)malloc((MAX_LINE+1)*sizeof(char));
+                strcpy(args[i],history[(buffHead-1)%10][i]);
+            }
+            args[i]=NULL;
+        } else {
+            printf("NO COMMANDS IN HISTORY\n");
+            return args;
+        }
+    } else if(args[1]==NULL && args[0][0]=='!') {
+        int idx;
+        char *sptr=&(args[0][1]);
+        if(sscanf(sptr,"%d",&idx)==1) {
+            if(idx>0 && buffHead>idx-1 && idx>buffHead-9) {
+                strcpy(args[0],history[(idx-1)%10][0]);
+                for(i=1;history[(idx-1)%10][i]!=NULL;i++) {
+                    args[i]=(char*)malloc((MAX_LINE+1)*sizeof(char));
+                    strcpy(args[i],history[(idx-1)%10][i]);
+                }
+                args[i]=NULL;
+            } else {
+                printf("NO SUCH COMMAND IN HISTORY(index out of range)\n");
+                return args;
+            }
+        } else {
+            printf("NO SUCH COMMAND IN HISTORY(invalid index)\n");
+            return args;
+        }
+    }
+
     for(i=0;i<(MAX_LINE/2+1) && history[buffHead%10][i]!=NULL;i++)
         free(history[buffHead%10][i]);
     for(i=0;args[i]!=NULL;i++) {
